@@ -70,6 +70,7 @@ evalFold hiFun (a :<| b :<| rest) = do
   newHead <- evalBinaryFun hiFun (HiExprValue a) (HiExprValue b)
   evalFold hiFun (newHead <| rest)
 -- evalFold _ (x :<| Empty) = return x
+evalFold _ (a :<| Empty) = return a
 evalFold _ _ = return HiValueNull
 
 evalBinaryFun :: Monad m => HiFun -> HiExpr -> HiExpr -> EvaluatorT m
@@ -187,7 +188,7 @@ evalUnaryStringFunNoThrow f a = do
 
 numberToWord8 :: Monad m => HiValue -> EvaluatorTypedT m W.Word8
 numberToWord8 (HiValueNumber number) = case getContainerMulArg number of
-  Just x -> return $ fromIntegral x
+  Just x -> if x > 255 || x < 0 then throwError HiErrorInvalidArgument else return $ fromIntegral x
   Nothing -> throwError HiErrorInvalidArgument
 numberToWord8 _ = throwError HiErrorInvalidArgument
 
